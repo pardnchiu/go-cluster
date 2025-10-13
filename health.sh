@@ -32,6 +32,9 @@ get_health() {
   local mem_info=$(free -b | grep Mem)
   local mem_max=$(echo "$mem_info" | awk '{print $2}')
   local mem=$(echo "$mem_info" | awk '{print $3}')
+
+  # get IP address
+  local ip=$(hostname -I | awk '{print $1}')
   
   # uptime
   # 2415.85 4766.80
@@ -48,6 +51,7 @@ get_health() {
   "maxmem": $mem_max,
   "mem": $mem,
   "node": "$hostname",
+  "ip": "$ip",
   "status": "$status",
   "uptime": $uptime_sec
 }
