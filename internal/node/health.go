@@ -2,7 +2,6 @@ package node
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"os"
 	"runtime"
@@ -16,7 +15,6 @@ type Health struct {
 	MaxDisk uint64  `json:"maxdisk"`
 	MaxMem  uint64  `json:"maxmem"`
 	Mem     uint64  `json:"mem"`
-	Node    string  `json:"node"`
 	IP      string  `json:"ip"`
 	Status  string  `json:"status"`
 	Uptime  int64   `json:"uptime"`
@@ -43,7 +41,7 @@ func CheckHealth() (interface{}, error) {
 		return nil, err
 	}
 
-	ip := getIP()
+	ip := GetIP()
 
 	uptime, err := getUptime()
 	if err != nil {
@@ -55,12 +53,11 @@ func CheckHealth() (interface{}, error) {
 	health := &Health{
 		CPU:     cpu,
 		Disk:    diskUsed,
-		ID:      fmt.Sprintf("node/%s", hostname),
+		ID:      hostname,
 		MaxCPU:  maxCPU,
 		MaxDisk: diskMax,
 		MaxMem:  memMax,
 		Mem:     memUsed,
-		Node:    hostname,
 		IP:      ip,
 		Status:  "online",
 		Uptime:  uptime,

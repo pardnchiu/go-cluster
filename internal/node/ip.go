@@ -4,7 +4,7 @@ import (
 	"net"
 )
 
-func getIP() string {
+func GetIP() string {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		return "127.0.0.1"

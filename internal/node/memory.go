@@ -13,6 +13,5 @@ func getMemory() (used, total uint64, err error) {
 	total = info.Totalram * uint64(info.Unit)
 	free := info.Freeram * uint64(info.Unit)
 	used = total - free
-
 	return used, total, nil
 }
