@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pardnchiu/pdcluster/internal/broadcast"
 	"github.com/pardnchiu/pdcluster/internal/database"
+	"github.com/pardnchiu/pdcluster/internal/node"
 )
 
 func init() {
@@ -21,6 +22,13 @@ func init() {
 }
 
 func main() {
+	if os.Geteuid() != 0 {
+		slog.Error("failed: need to run as root")
+		os.Exit(1)
+	}
+
+	node.InitKeyPair()
+
 	db, err := database.InitSQLite()
 	if err != nil {
 		slog.Error("failed: init database",
