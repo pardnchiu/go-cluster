@@ -23,7 +23,7 @@ type Health struct {
 func CheckHealth() (interface{}, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
-		return nil, err
+		hostname = AppName
 	}
 
 	cpu, err := getCpuUsage()
@@ -65,7 +65,9 @@ func CheckHealth() (interface{}, error) {
 
 	data, err := json.MarshalIndent(health, "", "  ")
 	if err != nil {
-		slog.Error("Failed to marshal data", slog.String("error", err.Error()))
+		slog.Error("Failed: marshal data",
+			slog.String("error", err.Error()),
+		)
 		os.Exit(1)
 	}
 

@@ -28,6 +28,7 @@ func main() {
 	}
 
 	node.InitKeyPair()
+	node.InitConfig()
 
 	db, err := database.InitSQLite()
 	if err != nil {

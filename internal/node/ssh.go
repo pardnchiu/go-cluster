@@ -65,7 +65,7 @@ func InitKeyPair() {
 
 		hostname, err := os.Hostname()
 		if err != nil {
-			hostname = "go-cluster"
+			hostname = AppName
 		}
 
 		// * generate public key

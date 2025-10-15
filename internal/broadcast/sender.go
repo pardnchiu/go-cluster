@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/pardnchiu/pdcluster/internal/node"
@@ -14,7 +15,7 @@ import (
 type sender struct {
 	conn     *net.UDPConn
 	interval time.Duration
-	nodes    []string
+	peers    []node.Peer
 }
 
 func InitSender() (*sender, error) {
@@ -30,11 +31,13 @@ func InitSender() (*sender, error) {
 		return nil, err
 	}
 
+	node.Local.Mu.RLock()
+	defer node.Local.Mu.RUnlock()
+
 	return &sender{
 		conn:     conn,
 		interval: time.Duration(sec) * time.Second,
-		// TODO: add sub nodes management, and cluster config to store peers
-		nodes: []string{"10.7.22.252:7989"},
+		peers:    node.Local.Peers,
 	}, nil
 }
 
@@ -56,17 +59,17 @@ func (s *sender) Start(ctx context.Context) error {
 			}
 
 			jsonData := data.([]byte)
-			nodes := s.nodes
-			if len(nodes) == 0 {
+			if len(s.peers) == 0 {
 				slog.Warn("no node to broadcast")
 				continue
 			}
 
-			for _, e := range nodes {
-				addr, err := net.ResolveUDPAddr("udp4", e)
+			for _, e := range s.peers {
+				node := e.IP + ":" + strconv.Itoa(e.Port)
+				addr, err := net.ResolveUDPAddr("udp4", node)
 				if err != nil {
 					slog.Error("invalid: address",
-						slog.String("node", e),
+						slog.String("node", node),
 						slog.String("error", err.Error()),
 					)
 					continue
@@ -74,7 +77,7 @@ func (s *sender) Start(ctx context.Context) error {
 
 				if _, err := s.conn.WriteToUDP(jsonData, addr); err != nil {
 					slog.Error("failed: send data",
-						slog.String("node", e),
+						slog.String("node", node),
 						slog.String("error", err.Error()),
 					)
 					continue
