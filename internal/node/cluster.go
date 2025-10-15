@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	Local   Cluster
+	Local   *Node
 	AppName = "go-cluster"
 )
 
@@ -21,10 +21,10 @@ var (
 	configPath   = filepath.Join(configFolder, configName)
 )
 
-type Cluster struct {
+type Node struct {
 	Mu    sync.RWMutex
-	Node  string `json:"node"`
-	IP    string `json:"ip"`
+	Node  string
+	IP    string
 	Peers []Peer
 }
 
@@ -43,7 +43,7 @@ type Peer struct {
 	Removed bool   `json:"removed"`
 }
 
-func InitConfig() error {
+func InitCluster() error {
 	port := util.GetEnv("RECEIVE_PORT").Int(7989)
 
 	if _, err := os.Stat(configFolder); os.IsNotExist(err) {
@@ -62,7 +62,7 @@ func InitConfig() error {
 			return fmt.Errorf("[InitConfig-2: %w]", err)
 		}
 
-		Local = Cluster{
+		Local = &Node{
 			Mu:    sync.RWMutex{},
 			Node:  config.Node,
 			IP:    config.IP,
@@ -77,7 +77,7 @@ func InitConfig() error {
 		hostname = AppName
 	}
 
-	ip := GetIP()
+	ip := ip()
 	peers := []Peer{
 		{
 			Node:    hostname,
@@ -95,7 +95,7 @@ func InitConfig() error {
 		Peers: peers,
 	}
 
-	Local = Cluster{
+	Local = &Node{
 		Mu:    sync.RWMutex{},
 		Node:  hostname,
 		IP:    ip,

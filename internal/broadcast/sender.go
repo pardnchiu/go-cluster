@@ -3,6 +3,7 @@ package broadcast
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net"
 	"strconv"
@@ -15,10 +16,13 @@ import (
 type sender struct {
 	conn     *net.UDPConn
 	interval time.Duration
-	peers    []node.Peer
+	node     *node.Node
 }
 
 func InitSender() (*sender, error) {
+	if node.Local == nil {
+		return nil, fmt.Errorf("failed: node not initialized")
+	}
 	sec := util.GetEnv("BROADCAST_INTERVAL").Int(5)
 	// * udp can use any available port
 	addr := &net.UDPAddr{
@@ -37,7 +41,7 @@ func InitSender() (*sender, error) {
 	return &sender{
 		conn:     conn,
 		interval: time.Duration(sec) * time.Second,
-		peers:    node.Local.Peers,
+		node:     node.Local,
 	}, nil
 }
 
@@ -50,7 +54,7 @@ func (s *sender) Start(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			data, err := node.CheckHealth()
+			data, err := s.node.CheckHealth()
 			if err != nil {
 				slog.Error("failed: check health",
 					slog.String("error", err.Error()),
@@ -59,12 +63,12 @@ func (s *sender) Start(ctx context.Context) error {
 			}
 
 			jsonData := data.([]byte)
-			if len(s.peers) == 0 {
+			if len(s.node.Peers) == 0 {
 				slog.Warn("no node to broadcast")
 				continue
 			}
 
-			for _, e := range s.peers {
+			for _, e := range s.node.Peers {
 				node := e.IP + ":" + strconv.Itoa(e.Port)
 				addr, err := net.ResolveUDPAddr("udp4", node)
 				if err != nil {

@@ -28,7 +28,7 @@ func main() {
 	}
 
 	node.InitKeyPair()
-	node.InitConfig()
+	node.InitCluster()
 
 	db, err := database.InitSQLite()
 	if err != nil {
