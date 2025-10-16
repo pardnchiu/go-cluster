@@ -8,15 +8,22 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-type DB struct {
-	SQLite *sql.DB
-}
+var (
+	Local *SQLite
+)
 
-func InitSQLite() (*DB, error) {
+type SQLite sql.DB
+
+// * templaure no other db
+// type DB struct {
+// 	SQLite *sql.DB
+// }
+
+func (d *SQLite) Init() error {
 	// TODO: consider is put in /var/lib/ better than env to specify path?
 	db, err := sql.Open("sqlite", "./health.db")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// * remove node, keep id
@@ -42,16 +49,16 @@ CREATE INDEX IF NOT EXISTS idx_last_update ON node_health(last_update);
 CREATE INDEX IF NOT EXISTS idx_status ON node_health(status);
 `); err != nil {
 		db.Close()
-		return nil, err
+		return err
 	}
 
-	return &DB{
-		SQLite: db,
-	}, nil
+	Local = (*SQLite)(db)
+
+	return nil
 }
 
-func (db *DB) UpdateHealth(health *node.Health) error {
-	_, err := db.SQLite.Exec(`
+func (db *SQLite) UpdateHealth(health *node.Health) error {
+	_, err := (*sql.DB)(db).Exec(`
 INSERT INTO node_health (
 	cpu, disk, id, 
 	maxcpu, maxdisk, maxmem, 
@@ -85,6 +92,6 @@ ON CONFLICT(id) DO UPDATE SET
 	return err
 }
 
-func (db *DB) Close() error {
-	return db.SQLite.Close()
+func (db *SQLite) Close() error {
+	return (*sql.DB)(db).Close()
 }

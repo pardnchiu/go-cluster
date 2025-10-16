@@ -2,6 +2,7 @@ package util
 
 import (
 	"os"
+	"runtime"
 	"strconv"
 )
 
@@ -28,4 +29,9 @@ func (e EnvValue) String(value string) string {
 		return value
 	}
 	return string(e)
+}
+
+func GetFuncName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	return runtime.FuncForPC(pc).Name()
 }

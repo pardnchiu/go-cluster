@@ -13,10 +13,10 @@ import (
 
 type Receiver struct {
 	conn *net.UDPConn
-	db   *database.DB
+	db   *database.SQLite
 }
 
-func InitReceiver(db *database.DB) (*Receiver, error) {
+func InitReceiver(db *database.SQLite) (*Receiver, error) {
 	port := util.GetEnv("RECEIVE_PORT").Int(7989)
 	addr := &net.UDPAddr{
 		IP:   net.IPv4zero,

@@ -4,30 +4,24 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/pem"
-	"log/slog"
+	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/pardnchiu/pdcluster/internal/util"
 	"golang.org/x/crypto/ssh"
 )
 
-func InitKeyPair() {
+func (n *Node) KeyPair() error {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		slog.Error("failed: no home folder",
-			slog.String("error", err.Error()),
-		)
-		os.Exit(1)
+		return fmt.Errorf("[%s-%d: %w]", util.GetFuncName(), 0, err)
 	}
 
 	folderPath := filepath.Join(home, ".ssh")
 	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(folderPath, 0700); err != nil {
-			slog.Error("failed: create folder",
-				slog.String("path", folderPath),
-				slog.String("error", err.Error()),
-			)
-			os.Exit(1)
+			return fmt.Errorf("[%s-%d: %w]", util.GetFuncName(), 0, err)
 		}
 	}
 
@@ -41,26 +35,16 @@ func InitKeyPair() {
 		// * generate private key
 		pub, pri, err := ed25519.GenerateKey(rand.Reader)
 		if err != nil {
-			slog.Error("failed: generate key pair",
-				slog.String("error", err.Error()),
-			)
-			os.Exit(1)
+			return fmt.Errorf("[%s-%d: %w]", util.GetFuncName(), 0, err)
 		}
 
 		// * not passphrase, for eazy use in automation
 		priKey, err := ssh.MarshalPrivateKey(pri, "")
 		if err != nil {
-			slog.Error("failed: marshal private key",
-				slog.String("error", err.Error()),
-			)
-			os.Exit(1)
+			return fmt.Errorf("[%s-%d: %w]", util.GetFuncName(), 0, err)
 		}
 		if err := os.WriteFile(keyPath, pem.EncodeToMemory(priKey), 0600); err != nil {
-			slog.Error("failed: write private key",
-				slog.String("path", keyPath),
-				slog.String("error", err.Error()),
-			)
-			os.Exit(1)
+			return fmt.Errorf("[%s-%d: %w]", util.GetFuncName(), 0, err)
 		}
 
 		hostname, err := os.Hostname()
@@ -71,24 +55,14 @@ func InitKeyPair() {
 		// * generate public key
 		pubKey, err := ssh.NewPublicKey(pub)
 		if err != nil {
-			slog.Error("failed: create public key",
-				slog.String("error", err.Error()),
-			)
-			os.Exit(1)
+			return fmt.Errorf("[%s-%d: %w]", util.GetFuncName(), 0, err)
 		}
 		pubBytes := ssh.MarshalAuthorizedKey(pubKey)
 		pubLine := string(pubBytes[:len(pubBytes)-1]) + " root@" + hostname + "\n"
 		if err := os.WriteFile(pubPath, []byte(pubLine), 0644); err != nil {
-			slog.Error("failed: write public key",
-				slog.String("path", pubPath),
-				slog.String("error", err.Error()),
-			)
-			os.Exit(1)
+			return fmt.Errorf("[%s-%d: %w]", util.GetFuncName(), 0, err)
 		}
 
-		slog.Info("SSH key pair generated",
-			slog.String("private", keyPath),
-			slog.String("public", pubPath),
-		)
 	}
+	return nil
 }
